@@ -1,0 +1,55 @@
+services:
+  # ---- Ollama: serves the local LLM. Uses the image's default startup
+  #      (runs `ollama serve` correctly) — we do NOT override it. ----
+  ollama:
+    image: ollama/ollama:latest
+    container_name: dpdp-ollama
+    volumes:
+      - ollama_models:/root/.ollama        # the model is stored here, persists across restarts
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]       # passes once the server is up
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  # ---- One-shot: pulls qwen2.5:1.5b into the Ollama server, then exits. ----
+  #      This is the compose equivalent of:
+  #        docker compose exec ollama ollama pull qwen2.5:1.5b
+  #      OLLAMA_HOST points the CLI at the server container so the *server*
+  #      downloads and stores the model in the ollama_models volume.
+  model-pull:
+    image: ollama/ollama:latest
+    container_name: dpdp-model-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434     # if your Ollama is older, use: ollama:11434
+    entrypoint: ["/bin/sh", "-c", "ollama pull qwen2.5:1.5b"]
+    restart: "no"
+
+  # ---- App: FastAPI + ChromaDB + widget. Starts after the model is pulled. ----
+  app:
+    build: .
+    container_name: dpdp-app
+    depends_on:
+      ollama:
+        condition: service_healthy
+      model-pull:
+        condition: service_completed_successfully   # wait until the pull finishes
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=qwen2.5:1.5b
+      - CHROMA_PATH=./chroma_db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data                    # drop your DPDP Act PDF here
+      - chroma_index:/app/chroma_db         # persist the vector index
+
+volumes:
+  ollama_models:
+  chroma_index:

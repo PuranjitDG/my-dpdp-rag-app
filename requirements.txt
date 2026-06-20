@@ -1,0 +1,12 @@
+# Core
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+
+# RAG stack
+chromadb>=0.5            # vector database + default MiniLM embeddings
+pypdf>=4.0              # read the DPDP Act PDF
+requests>=2.31          # call the local Ollama server
+
+# Only needed to generate the sample test PDF (optional)
+reportlab>=4.0
