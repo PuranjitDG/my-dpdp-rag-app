@@ -55,7 +55,6 @@ The widget renders inside a Shadow DOM (isolated styling) and calls the API (COR
 ## Learn it / present it
 
 - **`BUILD_GUIDE.md`** — build it on your computer step by step, with the concepts explained.
-- **`INTERVIEW_PREP.md`** — the pitch, concept cheat-sheet, likely Q&A, and a demo script.
 
 > The included `data/DPDP_sample.pdf` is a plain-language educational summary (current to the DPDP
 > Rules 2025), not the official text and not legal advice. Replace it with the official PDF and run
